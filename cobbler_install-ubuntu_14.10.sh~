@@ -1,0 +1,63 @@
+#!/bin/bash
+#
+# Script to deploy a wrking cobbler installation in Ubuntu Server 14.10
+# Author: Luis Henrique Bolson <luis@luisb.net>
+#
+# Based on http://springerpe.github.io/tech/2014/09/09/Installing-Cobbler-2.6.5-on-Ubuntu-14.04-LTS.html
+# 
+# Please run as root
+#
+
+# Add cobbler repository
+wget -qO - http://download.opensuse.org/repositories/home:/libertas-ict:/cobbler26/xUbuntu_14.10/Release.key | apt-key add -
+add-apt-repository "deb http://download.opensuse.org/repositories/home:/libertas-ict:/cobbler26/xUbuntu_14.10/ ./"
+
+# Update APT repo and install required packages
+apt-get update
+apt-get install -y cobbler debmirror isc-dhcp-server libapache2-mod-python
+
+Change manage_dhcp setting to enable cobbler to manage the DHCP server
+
+sudo vi /etc/cobbler/settings 
+manage_dhcp: 1
+server: 192.168.56.101
+next_server: 192.168.56.101
+
+sudo cobbler get-loaders
+
+Change the dhcp template file. This will be used to manage /etc/dhcpd.conf file, thus managing DHCP server configuration
+
+luis@repo:~$ sudo vi /etc/cobbler/dhcp.template
+
+In this example I've chaged the IPs to match my network settings
+
+subnet 192.168.56.0 netmask 255.255.255.0 {
+     option routers             192.168.56.1;
+     option domain-name-servers 192.168.56.1;
+     option subnet-mask         255.255.255.0;
+     range dynamic-bootp        192.168.1.110 192.168.1.254;
+     default-lease-time         21600;
+     max-lease-time             43200;
+     next-server                $next_server;
+     class "pxeclients" {
+          match if substring (option vendor-class-identifier, 0, 9) = "PXEClient";
+          if option pxe-system-type = 00:02 {
+                  filename "ia64/elilo.efi";
+          } else if option pxe-system-type = 00:06 {
+                  filename "grub/grub-x86.efi";
+          } else if option pxe-system-type = 00:07 {
+                  filename "grub/grub-x86_64.efi";
+          } else {
+                  filename "pxelinux.0";
+          }
+     }
+
+}
+
+sudo vi /etc/default/isc-dhcp-server
+INTERFACES="eth1"
+luis@repo:~$ sudo service cobbler restart
+luis@repo:~$ sudo cobbler sync
+
+sed 's/next_server: .*/next_server: 1135213245/' /etc/cobbler/settings | grep next
+
