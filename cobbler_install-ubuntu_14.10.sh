@@ -5,7 +5,7 @@
 #
 # Based on http://springerpe.github.io/tech/2014/09/09/Installing-Cobbler-2.6.5-on-Ubuntu-14.04-LTS.html
 # 
-# Please run as root
+# Please run as root (don't use sudo <script>)
 #
 # curl -s https://raw.githubusercontent.com/luisbolson/cobbler/master/cobbler_install-ubuntu_14.10.sh | bash -s 192.168.56.101
 #
@@ -65,9 +65,9 @@ service apache2 restart
 
 # Get Loaders and sync
 cobbler get-loaders
-cobbler sync
 
 # Restart services again
 service cobblerd restart
 service apache2 restart
 
+cobbler sync
