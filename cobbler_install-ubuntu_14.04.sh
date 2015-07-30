@@ -7,12 +7,12 @@
 # 
 # Please run as root (don't use sudo <script>)
 #
-# curl -s https://raw.githubusercontent.com/luisbolson/cobbler/master/cobbler_install-ubuntu_14.10.sh | bash -s 192.168.56.101
+# curl -s https://raw.githubusercontent.com/luisbolson/cobbler/master/cobbler_install-ubuntu_14.04.sh | bash -s 192.168.56.101
 #
 
 # Add cobbler repository
-wget -qO - http://download.opensuse.org/repositories/home:/libertas-ict:/cobbler26/xUbuntu_14.10/Release.key | apt-key add -
-add-apt-repository "deb http://download.opensuse.org/repositories/home:/libertas-ict:/cobbler26/xUbuntu_14.10/ ./"
+wget -qO - http://download.opensuse.org/repositories/home:/libertas-ict:/cobbler26/xUbuntu_14.04/Release.key | apt-key add -
+add-apt-repository "deb http://download.opensuse.org/repositories/home:/libertas-ict:/cobbler26/xUbuntu_14.04/ ./"
 
 # Update APT repo and install required packages
 apt-get update
