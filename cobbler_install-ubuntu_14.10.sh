@@ -62,6 +62,7 @@ chown www-data /var/lib/cobbler/webui_sessions
 
 # Restart services
 service cobblerd restart
+service apache2 restart
 cobbler sync
 
 
