@@ -66,7 +66,3 @@ service apache2 restart
 cobbler sync
 
 
-
-
-
-
