@@ -8,6 +8,17 @@
 # Please run as root
 #
 
+# Get network information for the given IP
+IP_ADDR=$1
+NETMASK=$(ifconfig | grep $IP_ADDR | cut -d ':' -f 4)
+NETDEVICE=$(ifconfig | grep -B1 $IP_ADDR | head -1 | awk '{print $1}')
+NETWORK=$(ipcalc ${IP_ADDR}/${NETMASK} | grep Network | cut -d '/' -f 1 | awk '{print $2}')
+NETMASK_HALF=$(expr $(ipcalc ${IP_ADDR}/${NETMASK} | grep Network | cut -d '/' -f 2 | awk '{print $1}') + 1)
+DHCP_MIN_HOST=$(ipcalc ${IP_ADDR}/${NETMASK_HALF} | grep Broadcast | awk '{print $2}')
+DHCP_MAX_HOST=$(ipcalc ${IP_ADDR}/${NETMASK} | grep HostMax | awk '{print $2}')
+
+# echo $IP_ADDR $NETMASK $NETDEVICE $NETWORK $NETMASK_HALF $DHCP_MIN_HOST $DHCP_MAX_HOST
+
 # Add cobbler repository
 wget -qO - http://download.opensuse.org/repositories/home:/libertas-ict:/cobbler26/xUbuntu_14.10/Release.key | apt-key add -
 add-apt-repository "deb http://download.opensuse.org/repositories/home:/libertas-ict:/cobbler26/xUbuntu_14.10/ ./"
@@ -16,48 +27,45 @@ add-apt-repository "deb http://download.opensuse.org/repositories/home:/libertas
 apt-get update
 apt-get install -y cobbler debmirror isc-dhcp-server libapache2-mod-python
 
-Change manage_dhcp setting to enable cobbler to manage the DHCP server
+# Move Cobbler Apache config to the right place
+cp /etc/apache2/conf.d/cobbler.conf /etc/apache2/conf-available/
+cp /etc/apache2/conf.d/cobbler_web.conf /etc/apache2/conf-available/
 
-sudo vi /etc/cobbler/settings 
-manage_dhcp: 1
-server: 192.168.56.101
-next_server: 192.168.56.101
+# Enable the above config
+a2enconf cobbler cobbler_web
 
-sudo cobbler get-loaders
+# Enable Proxy modules
+a2enmod proxy
+a2enmod proxy_http
 
-Change the dhcp template file. This will be used to manage /etc/dhcpd.conf file, thus managing DHCP server configuration
+# Generate a new django secret key
+SECRET_KEY=$(python -c 'import re;from random import choice; import sys; sys.stdout.write(re.escape("".join([choice("abcdefghijklmnopqrstuvwxyz0123456789^&*(-_=+)") for i in range(100)])))')
+sed --in-place "s/^SECRET_KEY = .*/SECRET_KEY = '${SECRET_KEY}'/" /usr/share/cobbler/web/settings.py
 
-luis@repo:~$ sudo vi /etc/cobbler/dhcp.template
+# Change IP and manage_dhcp in cobbler settings
+sed -i "s/127\.0\.0\.1/${IP_ADDR}/" /etc/cobbler/settings
+sed -i "s/manage_dhcp: .*/manage_dhcp: 1/" /etc/cobbler/settings
 
-In this example I've chaged the IPs to match my network settings
+sed -i "s/subnet .* netmask .* {/subnet $NETWORK netmask $NETMASK {/" /etc/cobbler/dhcp.template
+sed -i "/option routers             192.168.1.5;/d" /etc/cobbler/dhcp.template
+sed -i "/option domain-name-servers 192.168.1.1;/d" /etc/cobbler/dhcp.template
+sed -i "s/range dynamic-bootp .*/range dynamic-bootp        ${DHCP_MIN_HOST} ${DHCP_MAX_HOST};/" /etc/cobbler/dhcp.template
 
-subnet 192.168.56.0 netmask 255.255.255.0 {
-     option routers             192.168.56.1;
-     option domain-name-servers 192.168.56.1;
-     option subnet-mask         255.255.255.0;
-     range dynamic-bootp        192.168.1.110 192.168.1.254;
-     default-lease-time         21600;
-     max-lease-time             43200;
-     next-server                $next_server;
-     class "pxeclients" {
-          match if substring (option vendor-class-identifier, 0, 9) = "PXEClient";
-          if option pxe-system-type = 00:02 {
-                  filename "ia64/elilo.efi";
-          } else if option pxe-system-type = 00:06 {
-                  filename "grub/grub-x86.efi";
-          } else if option pxe-system-type = 00:07 {
-                  filename "grub/grub-x86_64.efi";
-          } else {
-                  filename "pxelinux.0";
-          }
-     }
+sed -i "s/INTERFACES=.*/INTERFACES=\"${NETDEVICE}\"/" /etc/default/isc-dhcp-server
 
-}
+# Get Loaders
+cobbler get-loaders
 
-sudo vi /etc/default/isc-dhcp-server
-INTERFACES="eth1"
-luis@repo:~$ sudo service cobbler restart
-luis@repo:~$ sudo cobbler sync
+# Permission Workarounds
+mkdir /tftpboot
+chown www-data /var/lib/cobbler/webui_sessions
 
-sed 's/next_server: .*/next_server: 1135213245/' /etc/cobbler/settings | grep next
+# Restart services
+service cobblerd restart
+cobbler sync
+
+
+
+
+
 

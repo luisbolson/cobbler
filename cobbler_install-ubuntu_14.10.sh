@@ -8,6 +8,14 @@
 # Please run as root
 #
 
+# Add cobbler repository
+wget -qO - http://download.opensuse.org/repositories/home:/libertas-ict:/cobbler26/xUbuntu_14.10/Release.key | apt-key add -
+add-apt-repository "deb http://download.opensuse.org/repositories/home:/libertas-ict:/cobbler26/xUbuntu_14.10/ ./"
+
+# Update APT repo and install required packages
+apt-get update
+apt-get install -y cobbler debmirror isc-dhcp-server libapache2-mod-python ipcalc
+
 # Get network information for the given IP
 IP_ADDR=$1
 NETMASK=$(ifconfig | grep $IP_ADDR | cut -d ':' -f 4)
@@ -18,14 +26,6 @@ DHCP_MIN_HOST=$(ipcalc ${IP_ADDR}/${NETMASK_HALF} | grep Broadcast | awk '{print
 DHCP_MAX_HOST=$(ipcalc ${IP_ADDR}/${NETMASK} | grep HostMax | awk '{print $2}')
 
 # echo $IP_ADDR $NETMASK $NETDEVICE $NETWORK $NETMASK_HALF $DHCP_MIN_HOST $DHCP_MAX_HOST
-
-# Add cobbler repository
-wget -qO - http://download.opensuse.org/repositories/home:/libertas-ict:/cobbler26/xUbuntu_14.10/Release.key | apt-key add -
-add-apt-repository "deb http://download.opensuse.org/repositories/home:/libertas-ict:/cobbler26/xUbuntu_14.10/ ./"
-
-# Update APT repo and install required packages
-apt-get update
-apt-get install -y cobbler debmirror isc-dhcp-server libapache2-mod-python
 
 # Move Cobbler Apache config to the right place
 cp /etc/apache2/conf.d/cobbler.conf /etc/apache2/conf-available/
