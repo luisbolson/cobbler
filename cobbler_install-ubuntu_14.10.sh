@@ -59,14 +59,15 @@ sed -i "s/INTERFACES=.*/INTERFACES=\"${NETDEVICE}\"/" /etc/default/isc-dhcp-serv
 mkdir /tftpboot
 chown www-data /var/lib/cobbler/webui_sessions
 
-# Restart Apache
-service apache2 restart
-
-# Get Loaders
-cobbler get-loaders
-
 # Restart services
 service cobblerd restart
 service apache2 restart
+
+# Get Loaders and sync
+cobbler get-loaders
 cobbler sync
+
+# Restart services again
+service cobblerd restart
+service apache2 restart
 
