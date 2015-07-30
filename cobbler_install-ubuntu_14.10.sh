@@ -7,6 +7,8 @@
 # 
 # Please run as root
 #
+# curl -s https://raw.githubusercontent.com/luisbolson/cobbler/master/cobbler_install-ubuntu_14.10.sh | bash -s 192.168.56.101
+#
 
 # Add cobbler repository
 wget -qO - http://download.opensuse.org/repositories/home:/libertas-ict:/cobbler26/xUbuntu_14.10/Release.key | apt-key add -
@@ -53,16 +55,18 @@ sed -i "s/range dynamic-bootp .*/range dynamic-bootp        ${DHCP_MIN_HOST} ${D
 
 sed -i "s/INTERFACES=.*/INTERFACES=\"${NETDEVICE}\"/" /etc/default/isc-dhcp-server
 
-# Get Loaders
-cobbler get-loaders
-
 # Permission Workarounds
 mkdir /tftpboot
 chown www-data /var/lib/cobbler/webui_sessions
+
+# Restart Apache
+service apache2 restart
+
+# Get Loaders
+cobbler get-loaders
 
 # Restart services
 service cobblerd restart
 service apache2 restart
 cobbler sync
-
 
