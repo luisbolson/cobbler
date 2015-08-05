@@ -4,7 +4,7 @@
 # Author: Luis Henrique Bolson <luis@luisb.net>
 #
 # Based on http://springerpe.github.io/tech/2014/09/09/Installing-Cobbler-2.6.5-on-Ubuntu-14.04-LTS.html
-# 
+#
 # Please run as root (don't use sudo <script>)
 #
 # curl -s https://raw.githubusercontent.com/luisbolson/cobbler/master/cobbler_install-ubuntu_14.04.sh | bash -s 192.168.56.101
@@ -16,7 +16,7 @@ add-apt-repository "deb http://download.opensuse.org/repositories/home:/libertas
 
 # Update APT repo and install required packages
 apt-get update
-apt-get install -y cobbler debmirror isc-dhcp-server libapache2-mod-python ipcalc
+apt-get install -y cobbler debmirror isc-dhcp-server ipcalc
 
 # Get network information for the given IP
 IP_ADDR=$1
