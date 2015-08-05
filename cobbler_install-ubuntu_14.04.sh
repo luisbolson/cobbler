@@ -16,7 +16,7 @@ add-apt-repository "deb http://download.opensuse.org/repositories/home:/libertas
 
 # Update APT repo and install required packages
 apt-get update
-apt-get install -y cobbler debmirror isc-dhcp-server ipcalc
+apt-get install -y cobbler debmirror isc-dhcp-server ipcalc tftpd
 
 # Get network information for the given IP
 IP_ADDR=$1
@@ -48,12 +48,17 @@ sed --in-place "s/^SECRET_KEY = .*/SECRET_KEY = '${SECRET_KEY}'/" /usr/share/cob
 sed -i "s/127\.0\.0\.1/${IP_ADDR}/" /etc/cobbler/settings
 sed -i "s/manage_dhcp: .*/manage_dhcp: 1/" /etc/cobbler/settings
 
+# Change DHCP server template to match the given network configuration
 sed -i "s/subnet .* netmask .* {/subnet $NETWORK netmask $NETMASK {/" /etc/cobbler/dhcp.template
 sed -i "/option routers             192.168.1.5;/d" /etc/cobbler/dhcp.template
 sed -i "/option domain-name-servers 192.168.1.1;/d" /etc/cobbler/dhcp.template
 sed -i "s/range dynamic-bootp .*/range dynamic-bootp        ${DHCP_MIN_HOST} ${DHCP_MAX_HOST};/" /etc/cobbler/dhcp.template
 
+# Change dhcp-server default listening interface
 sed -i "s/INTERFACES=.*/INTERFACES=\"${NETDEVICE}\"/" /etc/default/isc-dhcp-server
+
+# Fix TFTP server arguments in cobbler template to enable it to work on Ubuntu
+sed -i "s/server_args .*/server_args             = -s \$args/" /etc/cobbler/tftpd.template
 
 # Permission Workarounds
 mkdir /tftpboot
