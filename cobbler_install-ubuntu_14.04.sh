@@ -66,8 +66,12 @@ service apache2 restart
 # Get Loaders and sync
 cobbler get-loaders
 
-# Restart services again
+# Update Cobbler Signatures
+cobbler signature update
+
+# Restart services again and configure autostart
 service cobblerd restart
 service apache2 restart
+update-rc.d cobblerd defaults
 
 cobbler sync
