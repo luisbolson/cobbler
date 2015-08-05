@@ -77,6 +77,7 @@ cobbler signature update
 # Restart services again and configure autostart
 service cobblerd restart
 service apache2 restart
+service xinetd restart
 update-rc.d cobblerd defaults
 
 cobbler sync
