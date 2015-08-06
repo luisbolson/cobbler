@@ -27,8 +27,6 @@ NETMASK_HALF=$(expr $(ipcalc ${IP_ADDR}/${NETMASK} | grep Network | cut -d '/' -
 DHCP_MIN_HOST=$(ipcalc ${IP_ADDR}/${NETMASK_HALF} | grep Broadcast | awk '{print $2}')
 DHCP_MAX_HOST=$(ipcalc ${IP_ADDR}/${NETMASK} | grep HostMax | awk '{print $2}')
 
-# echo $IP_ADDR $NETMASK $NETDEVICE $NETWORK $NETMASK_HALF $DHCP_MIN_HOST $DHCP_MAX_HOST
-
 # Move Cobbler Apache config to the right place
 cp /etc/apache2/conf.d/cobbler.conf /etc/apache2/conf-available/
 cp /etc/apache2/conf.d/cobbler_web.conf /etc/apache2/conf-available/
@@ -42,7 +40,7 @@ a2enmod proxy_http
 
 # Generate a new django secret key
 SECRET_KEY=$(python -c 'import re;from random import choice; import sys; sys.stdout.write(re.escape("".join([choice("abcdefghijklmnopqrstuvwxyz0123456789^&*(-_=+)") for i in range(100)])))')
-sed --in-place "s/^SECRET_KEY = .*/SECRET_KEY = '${SECRET_KEY}'/" /usr/share/cobbler/web/settings.py
+sed -i "s/^SECRET_KEY = .*/SECRET_KEY = '${SECRET_KEY}'/" /usr/share/cobbler/web/settings.py
 
 # Change IP and manage_dhcp in cobbler settings
 sed -i "s/127\.0\.0\.1/${IP_ADDR}/" /etc/cobbler/settings
@@ -59,6 +57,10 @@ sed -i "s/INTERFACES=.*/INTERFACES=\"${NETDEVICE}\"/" /etc/default/isc-dhcp-serv
 
 # Fix TFTP server arguments in cobbler template to enable it to work on Ubuntu
 sed -i "s/server_args .*/server_args             = -s \$args/" /etc/cobbler/tftpd.template
+
+# Fix Apache conf to match 2.4 configuration
+sed -i "/Order allow,deny/d" /etc/apache2/conf-enabled/cobbler*.conf
+sed -i "s/Allow from all/Require all granted/" /etc/apache2/conf-enabled/cobbler*.conf
 
 # Permission Workarounds
 mkdir /tftpboot
@@ -80,4 +82,5 @@ service apache2 restart
 service xinetd restart
 update-rc.d cobblerd defaults
 
+# Sync cobbler configuration
 cobbler sync
