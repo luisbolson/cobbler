@@ -5,7 +5,7 @@
 #
 # Please run as root (don't use sudo <script>)
 #
-# curl -s https://raw.githubusercontent.com/luisbolson/cobbler/master/cobbler_install-centos_7.sh | bash -s 192.168.56.101 > /tmp/cobbler_install.log
+# curl -s https://raw.githubusercontent.com/luisbolson/cobbler/master/cobbler_install-centos_7.sh | bash -s 192.168.56.102 192.168.56.201 192.168.56.245 > /tmp/cobbler_install.log
 
 # External Variables
 
@@ -18,7 +18,10 @@ DHCP_MAX_HOST=$3
 # Install epel-release
 yum install -y epel-release
 # Installs cobbler and related packages
-yum install -y cobbler cobbler-web dhcp wget perl bzip2 pykickstart fence-agents bc https://dl.fedoraproject.org/pub/epel/6/x86_64/debmirror-2.14-2.el6.noarch.rpm
+yum install -y cobbler cobbler-web dhcp wget perl bzip2 pykickstart fence-agents bc
+
+# As of the writing of this script there was no el7 version for debmirror on epel. Using here el6 version.
+yum install -y https://dl.fedoraproject.org/pub/epel/6/x86_64/debmirror-2.14-2.el6.noarch.rpm
 
 # Get network information for the given IP
 NETMASK=$(ifconfig | grep $IP_ADDR | awk '{print $4}')
