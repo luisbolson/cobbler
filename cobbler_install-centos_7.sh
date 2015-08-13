@@ -57,6 +57,9 @@ systemctl enable cobblerd
 systemctl start httpd
 systemctl start cobblerd
 
+# Don't go to fast!!!
+sleep 5
+
 # Get cobbler loaders and update signature
 cobbler get-loaders
 cobbler signature update
