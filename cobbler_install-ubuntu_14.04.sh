@@ -70,7 +70,7 @@ chown www-data /var/lib/cobbler/webui_sessions
 service cobblerd restart
 service apache2 restart
 
-# Get Loaders and sync
+# Get Loaders
 cobbler get-loaders
 
 # Update Cobbler Signatures
